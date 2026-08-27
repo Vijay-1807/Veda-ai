@@ -1,0 +1,15 @@
+node_modules
+.next
+.env
+.env.local
+*.log
+.vercel
+tsconfig.tsbuildinfo
+VedaAI Hiring Assignment.zip
+VedaAI Hiring Assignment/
+logs/
+scripts/sample-*.pdf
+scripts/shots/
+test imgs/
+test-response.json
+test-groq.json
