@@ -1,5 +1,19 @@
 # VedaAI Assessment Mapper
 
+## Output Images
+
+The following images demonstrate the extraction pipeline results:
+
+| Question Paper | Answer Sheet | Extraction Result |
+|----------------|--------------|-------------------|
+| ![Image 1](output-images/image1.png) | ![Image 2](output-images/image2.png) | ![Image 3](output-images/image3.png) |
+
+| Question Extraction | Answer Extraction | Mapped Results |
+|---------------------|-------------------|----------------|
+| ![Image 4](output-images/image4.png) | ![Image 5](output-images/image5.png) | ![Image 7](output-images/image7.png) |
+
+*Images 1-5 show the question paper, answer sheet, extraction results, question extraction, and answer extraction. Image 7 shows the final mapped results with highlighted regions.*
+
 A Next.js hiring-assignment application that extracts questions from a question paper, extracts handwritten answers, maps answers to questions, and renders normalized answer-region highlights over PDF or image pages.
 
 ## Architecture
@@ -70,20 +84,6 @@ Files are processed for the assessment workflow and are not persisted in a datab
 ## Deployment
 
 Import this repository into Vercel as a Next.js project and configure the variables from `.env.example` in Project Settings. Keep the project root at the repository root. The extraction route uses the Node.js runtime, declares a 120-second maximum duration, and requires no database or filesystem persistence.
-
-## Output Images
-
-The following images demonstrate the extraction pipeline results:
-
-| Question Paper | Answer Sheet | Extraction Result |
-|----------------|--------------|-------------------|
-| ![Image 1](output-images/image1.png) | ![Image 2](output-images/image2.png) | ![Image 3](output-images/image3.png) |
-
-| Question Extraction | Answer Extraction | Mapped Results |
-|---------------------|-------------------|----------------|
-| ![Image 4](output-images/image4.png) | ![Image 5](output-images/image5.png) | ![Image 7](output-images/image7.png) |
-
-*Images 1-5 show the question paper, answer sheet, extraction results, question extraction, and answer extraction. Image 7 shows the final mapped results with highlighted regions.*
 
 ## Known Limitations
 
