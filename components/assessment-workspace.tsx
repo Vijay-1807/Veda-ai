@@ -75,10 +75,14 @@ function VedaLogo({ size = 30 }: { size?: number }) {
 function SparkleIconLarge() {
   return (
     <svg width="90" height="90" viewBox="0 0 90 90" fill="none">
-      <path d="M52 10 L56 28 L74 24 L58 36 L74 48 L56 44 L52 62 L48 44 L30 48 L46 36 L30 24 L48 28 Z" fill="#ff5623" />
-      <circle cx="34" cy="34" r="4" fill="#ff5623" opacity="0.6" />
-      <path d="M64 52 L66 58 L72 56 L66 60 L68 66 L64 62 L60 66 L62 60 L56 56 L62 58 Z" fill="#ff5623" opacity="0.45" />
-      <circle cx="62" cy="62" r="2.5" fill="#ff5623" opacity="0.35" />
+      {/* Main 4-pointed star */}
+      <path d="M45 8 L50 35 L77 30 L52 45 L77 60 L50 55 L45 82 L40 55 L13 60 L38 45 L13 30 L40 35 Z" fill="#ff5623" />
+      {/* Small accent dot */}
+      <circle cx="32" cy="32" r="4" fill="#ff5623" opacity="0.6" />
+      {/* Smaller sparkle */}
+      <path d="M62 55 L64 62 L71 60 L64 64 L66 71 L62 67 L58 71 L60 64 L53 60 L60 62 Z" fill="#ff5623" opacity="0.45" />
+      {/* Tiny dot */}
+      <circle cx="60" cy="60" r="2.5" fill="#ff5623" opacity="0.35" />
     </svg>
   );
 }
@@ -109,7 +113,7 @@ function PdfIcon() {
 
 function CustomImageIcon() {
   return (
-    <div className="pdf-icon" style={{ background: "#d8d8d8" }}>
+    <div className="pdf-icon" style={{ background: "#4a90d9" }}>
       <svg width="22" height="26" viewBox="0 0 22 26" fill="none">
         <rect x="1" y="1" width="20" height="24" rx="2" fill="white" fillOpacity="0.25" stroke="white" strokeWidth="1.5" />
         <text x="11" y="16" textAnchor="middle" fill="white" fontSize="7" fontWeight="800" fontFamily="DM Sans">IMG</text>
@@ -339,8 +343,8 @@ function UploadCard({
         </div>
       ) : (
         <div onClick={() => inputRef.current?.click()} style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", height: "100%" }}>
-          <div className="upload-icon-wrap" style={{ background: "#f0f0f0" }}>
-            <UploadCloud size={24} color="#333" />
+          <div className="upload-icon-wrap" style={{ background: "#e8f0fe" }}>
+            <UploadCloud size={24} color="#4a90d9" />
           </div>
           <div className="upload-card-label">
             Upload <span className="hl">{keyword}</span>
