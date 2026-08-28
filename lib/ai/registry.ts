@@ -28,7 +28,6 @@ export type ProviderEntry = {
 // Controlled ordering of multi-modal vision reasoning providers.
 // Verified providers lead each phase; intermittent providers remain as fallbacks.
 export const PROVIDER_ORDER: string[] = [
-  "navyai-gemini25",
   "ollama-gemma4",
   "ollama-minimax-m3",
   "gemini35",
@@ -37,10 +36,10 @@ export const PROVIDER_ORDER: string[] = [
   "nararouter-minimax",
   "monyet",
   "nemotron",
+  "navyai-gemini25",
 ];
 
 export const QUESTION_PROVIDER_ORDER: string[] = [
-  "navyai-gemini25",
   "ollama-gemma4",
   "ollama-minimax-m3",
   "gemini35",
@@ -49,10 +48,10 @@ export const QUESTION_PROVIDER_ORDER: string[] = [
   "nararouter-minimax",
   "monyet",
   "nemotron",
+  "navyai-gemini25",
 ];
 
 export const ANSWER_PROVIDER_ORDER: string[] = [
-  "navyai-gemini25",
   "ollama-gemma4",
   "ollama-minimax-m3",
   "gemini35",
@@ -61,6 +60,7 @@ export const ANSWER_PROVIDER_ORDER: string[] = [
   "nararouter-minimax",
   "monyet",
   "nemotron",
+  "navyai-gemini25",
 ];
 
 // ── SPECIALIZED OCR ENGINE (Separate from VLM Chain) ────────────
