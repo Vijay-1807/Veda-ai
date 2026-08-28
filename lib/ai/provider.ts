@@ -331,14 +331,18 @@ export function normalizeExtraction(input: unknown) {
 export const GRADING_PROMPT = (questions: Array<{ number: string; text: string; marks: number | null; answerText: string }>) =>
   `You are an expert exam evaluator. Grade each student answer against its question. Read the student's answer text carefully and evaluate how well it answers the question.
 
-For each question, award marks from 0 to the maximum based on:
-- Correctness of the answer
-- Completeness (key points covered)
-- Accuracy of facts/concepts
-- Quality of explanation
+GRADING RULES:
+- Award partial marks for partially correct answers
+- A completely correct, complete answer gets full marks
+- A partially correct answer gets proportional marks (e.g., 1/2, 2/3, 3/5)
+- An incorrect or irrelevant answer gets 0 marks
+- An empty or missing answer gets 0 marks
+- Consider: correctness, completeness, key points covered, accuracy
+
+For each question, return the earned marks from 0 to the maximum.
 
 Return ONLY valid JSON with this shape:
-{"grades":[{"number":"1","earned":2,"feedback":"Excellent work! The answer correctly identifies..."},{"number":"2","earned":0,"feedback":"No answer was provided."}]}
+{"grades":[{"number":"1","earned":2,"feedback":"Correct answer with good explanation."},{"number":"2","earned":0,"feedback":"No answer provided."},{"number":"3","earned":1,"feedback":"Partially correct - mentioned photosynthesis but missed the diagram requirement."}]}
 
 Questions to grade:
 ${JSON.stringify(questions, null, 2)}`;
@@ -363,6 +367,20 @@ export async function gradeAnswersWithProvider(
       apiKey: process.env.GROQ_API_KEY || "",
       model: "qwen/qwen3.6-27b",
       isGroq: true,
+    },
+    {
+      name: "ollama-gemma4",
+      baseUrl: "https://ollama.com/v1",
+      apiKey: process.env.OLLAMA_CLOUD_API_KEY || "",
+      model: "gemma4:31b",
+      isGroq: false,
+    },
+    {
+      name: "ollama-minimax",
+      baseUrl: "https://ollama.com/v1",
+      apiKey: process.env.OLLAMA_CLOUD_API_KEY || "",
+      model: "minimax-m3",
+      isGroq: false,
     },
     {
       name: "monyet",
