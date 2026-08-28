@@ -190,8 +190,8 @@ function Sidebar({
           <img
             src="/dps-logo.png"
             alt="Delhi Public School"
-            width={32}
-            height={32}
+            width={42}
+            height={42}
             className="school-logo-img"
             style={{ borderRadius: "50%" }}
           />
