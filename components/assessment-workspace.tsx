@@ -74,16 +74,44 @@ function VedaLogo({ size = 30 }: { size?: number }) {
 
 function SparkleIconLarge() {
   return (
-    <svg width="90" height="90" viewBox="0 0 90 90" fill="none">
-      {/* Main 4-pointed star */}
-      <path d="M45 8 L50 35 L77 30 L52 45 L77 60 L50 55 L45 82 L40 55 L13 60 L38 45 L13 30 L40 35 Z" fill="#ff5623" />
-      {/* Small accent dot */}
-      <circle cx="32" cy="32" r="4" fill="#ff5623" opacity="0.6" />
-      {/* Smaller sparkle */}
-      <path d="M62 55 L64 62 L71 60 L64 64 L66 71 L62 67 L58 71 L60 64 L53 60 L60 62 Z" fill="#ff5623" opacity="0.45" />
-      {/* Tiny dot */}
-      <circle cx="60" cy="60" r="2.5" fill="#ff5623" opacity="0.35" />
-    </svg>
+    <div style={{ position: "relative", width: 110, height: 120 }}>
+      <svg
+        style={{ position: "absolute", width: 71, height: 70, left: 28, top: 0, overflow: "visible", animation: "mainBlink 2.2s cubic-bezier(.4,0,.2,1) infinite" }}
+        viewBox="0 0 100 100"
+        xmlns="http://www.w3.org/2000/svg"
+      >
+        <defs>
+          <linearGradient id="mainGradient" x1="18" y1="8" x2="82" y2="92" gradientUnits="userSpaceOnUse">
+            <stop offset="0%" stopColor="#ff8060" />
+            <stop offset="48%" stopColor="#ff5a37" />
+            <stop offset="100%" stopColor="#ff4324" />
+          </linearGradient>
+        </defs>
+        <path fill="url(#mainGradient)" d="M50 0 C48.5 18 46.4 30 39.1 39.2 C29.9 46.4 18 48.5 0 50 C18 51.5 29.9 53.6 39.1 60.8 C46.4 70 48.5 82 50 100 C51.5 82 53.6 70 60.9 60.8 C70.1 53.6 82 51.5 100 50 C82 48.5 70.1 46.4 60.9 39.2 C53.6 30 51.5 18 50 0 Z" />
+      </svg>
+      <div style={{ position: "absolute", width: 12, height: 12, left: 0, top: 35, borderRadius: "50%", background: "#ff9677", animation: "dotBlink 2.2s cubic-bezier(.4,0,.2,1) infinite" }} />
+      <svg
+        style={{ position: "absolute", width: 49, height: 49, left: 6, top: 61, overflow: "visible", animation: "lowerBlink 2.2s cubic-bezier(.4,0,.2,1) infinite" }}
+        viewBox="0 0 100 100"
+        xmlns="http://www.w3.org/2000/svg"
+      >
+        <defs>
+          <linearGradient id="lowerGradient" x1="20" y1="5" x2="80" y2="95" gradientUnits="userSpaceOnUse">
+            <stop offset="0%" stopColor="#ff8060" />
+            <stop offset="55%" stopColor="#ff5a38" />
+            <stop offset="100%" stopColor="#ff4325" />
+          </linearGradient>
+        </defs>
+        <path fill="url(#lowerGradient)" d="M50 0 C48.2 18 46.1 29 39 39 C29 46.1 18 48.2 0 50 C18 51.8 29 53.9 39 61 C46.1 71 48.2 82 50 100 C51.8 82 53.9 71 61 61 C71 53.9 82 51.8 100 50 C82 48.2 71 46.1 61 39 C53.9 29 51.8 18 50 0 Z" />
+      </svg>
+      <svg
+        style={{ position: "absolute", width: 12, height: 12, left: 81, top: 80, overflow: "visible", animation: "tinyBlink 2.2s cubic-bezier(.4,0,.2,1) infinite" }}
+        viewBox="0 0 100 100"
+        xmlns="http://www.w3.org/2000/svg"
+      >
+        <path fill="#ffad96" d="M50 0 C48.2 18 46 30 39 39 C30 46 18 48.2 0 50 C18 51.8 30 54 39 61 C46 70 48.2 82 50 100 C51.8 82 54 70 61 61 C70 54 82 51.8 100 50 C82 48.2 70 46 61 39 C54 30 51.8 18 50 0 Z" />
+      </svg>
+    </div>
   );
 }
 

@@ -354,49 +354,69 @@ export async function gradeAnswersWithProvider(
   questions: Array<{ number: string; text: string; marks: number | null; answerText: string }>
 ): Promise<GradeResult[]> {
   const prompt = GRADING_PROMPT(questions);
-  const baseUrl = process.env.NAVYAI_BASE_URL || "https://api.navy/v1";
-  const apiKey = process.env.NAVYAI_API_KEY || "";
-  const model = "gemini-2.5-flash";
 
-  if (!apiKey) {
-    console.warn("[grading] No API key available, skipping grading");
-    return [];
-  }
+  // Try providers in order: NavyAI → Groq → Gemini
+  const attempts = [
+    {
+      name: "navyai",
+      baseUrl: process.env.NAVYAI_BASE_URL || "https://api.navy/v1",
+      apiKey: process.env.NAVYAI_API_KEY || "",
+      model: "gemini-2.5-flash",
+    },
+    {
+      name: "groq",
+      baseUrl: process.env.GROQ_BASE_URL || "https://api.groq.com/openai/v1",
+      apiKey: process.env.GROQ_API_KEY || "",
+      model: process.env.GROQ_MODEL || "qwen/qwen3.6-27b",
+    },
+    {
+      name: "monyet",
+      baseUrl: process.env.MONYET_BASE_URL || "https://tokenin.my.id/v1",
+      apiKey: process.env.MONYET_API_KEY || "",
+      model: process.env.MONYET_MODEL || "myt/gemini-3.5-flash-free",
+    },
+  ];
 
-  try {
-    const response = await fetch(`${baseUrl}/chat/completions`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${apiKey}`,
-      },
-      body: JSON.stringify({
-        model,
-        messages: [{ role: "user", content: prompt }],
-        temperature: 0.1,
-        max_tokens: 4096,
-      }),
-      signal: AbortSignal.timeout(30000),
-    });
+  for (const attempt of attempts) {
+    if (!attempt.apiKey) continue;
 
-    if (!response.ok) {
-      console.warn(`[grading] Provider ${provider.name} returned ${response.status}`);
-      return [];
+    try {
+      console.log(`[grading] Trying ${attempt.name}...`);
+      const response = await fetch(`${attempt.baseUrl}/chat/completions`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${attempt.apiKey}`,
+        },
+        body: JSON.stringify({
+          model: attempt.model,
+          messages: [{ role: "user", content: prompt }],
+          temperature: 0.1,
+          max_tokens: 4096,
+        }),
+        signal: AbortSignal.timeout(30000),
+      });
+
+      if (!response.ok) {
+        console.warn(`[grading] ${attempt.name} returned ${response.status}`);
+        continue;
+      }
+
+      const data = await response.json();
+      const text = data.choices?.[0]?.message?.content ?? "";
+      const parsed = parseModelJson(text) as { grades?: GradeResult[] } | null;
+
+      if (parsed && Array.isArray(parsed.grades)) {
+        console.log(`[grading] ${attempt.name} graded ${parsed.grades.length} answers`);
+        return parsed.grades.map((grade) => ({
+          number: String(grade.number),
+          earned: Math.max(0, Math.min(grade.earned ?? 0, questions.find((q) => q.number === grade.number)?.marks ?? 0)),
+          feedback: String(grade.feedback ?? ""),
+        }));
+      }
+    } catch (error) {
+      console.warn(`[grading] ${attempt.name} failed:`, error instanceof Error ? error.message : error);
     }
-
-    const data = await response.json();
-    const text = data.choices?.[0]?.message?.content ?? "";
-    const parsed = parseModelJson(text) as { grades?: GradeResult[] } | null;
-
-    if (parsed && Array.isArray(parsed.grades)) {
-      return parsed.grades.map((grade) => ({
-        number: String(grade.number),
-        earned: Math.max(0, Math.min(grade.earned ?? 0, questions.find((q) => q.number === grade.number)?.marks ?? 0)),
-        feedback: String(grade.feedback ?? ""),
-      }));
-    }
-  } catch (error) {
-    console.warn(`[grading] Failed:`, error instanceof Error ? error.message : error);
   }
 
   return [];
