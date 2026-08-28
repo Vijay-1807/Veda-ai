@@ -56,7 +56,7 @@ function check(name, ok, detail = '') {
   const h1 = await page.locator('.upload-hero h1').textContent();
   check('Hero heading text', h1.includes('Upload') && h1.includes('Question Paper & Answer Sheets'));
   const accentColor = await page.locator('.upload-hero .accent').evaluate(el => getComputedStyle(el).color);
-  check('Accent coral color', accentColor === 'rgb(239, 116, 88)', accentColor);
+  check('Accent coral color', accentColor === 'rgb(255, 86, 35)', accentColor);
   check('Subtitle', await page.locator('.upload-hero p:has-text("Upload both files to get started")').count() === 1);
   check('Avatar illustration', await page.locator('.upload-avatar').isVisible());
 
@@ -70,7 +70,7 @@ function check(name, ok, detail = '') {
   // Start button disabled
   check('Start Mapping disabled initially', await page.locator('.start-btn').isDisabled());
   const disabledBg = await page.locator('.start-btn').evaluate(el => getComputedStyle(el).backgroundColor);
-  check('Disabled button gray', disabledBg === 'rgb(229, 226, 220)', disabledBg);
+  check('Disabled button gray', disabledBg === 'rgb(222, 222, 222)', disabledBg);
 
   // Footer note
   check('Footer note present', await page.locator('.upload-footer').isVisible());
@@ -93,7 +93,7 @@ function check(name, ok, detail = '') {
   // Start enabled now
   check('Start Mapping enabled after both files', !(await page.locator('.start-btn').isDisabled()));
   const enabledBg = await page.locator('.start-btn').evaluate(el => getComputedStyle(el).backgroundColor);
-  check('Enabled button charcoal', enabledBg === 'rgb(41, 39, 34)', enabledBg);
+  check('Enabled button charcoal', enabledBg === 'rgb(48, 48, 48)', enabledBg);
 
   // Remove flow
   await page.locator('.filled-remove').first().click();
@@ -139,11 +139,11 @@ function check(name, ok, detail = '') {
   check('Score pills rendered', pillFull + pillZero > 0, `full:${pillFull} zero:${pillZero}`);
   if (pillFull > 0) {
     const c = await page.locator('.score-pill.full').first().evaluate(el => getComputedStyle(el).backgroundColor);
-    check('Green score pill bg', c === 'rgb(234, 246, 238)', c);
+    check('Green score pill bg', c === 'rgb(239, 249, 235)', c);
   }
 
   // Viewer toolbar
-  check('Viewer toolbar dark', (await page.locator('.viewer-toolbar').evaluate(el => getComputedStyle(el).backgroundColor)) === 'rgb(41, 39, 34)');
+  check('Viewer toolbar dark', (await page.locator('.viewer-toolbar').evaluate(el => getComputedStyle(el).backgroundColor)) === 'rgb(48, 48, 48)');
   check('Answer Sheet title', await page.locator('.viewer-toolbar-title:has-text("Answer Sheet")').count() === 1);
   check('Zoom controls', await page.locator('.zoom-controls').count() === 1);
   check('Zoom value 100%', (await page.locator('.zoom-val').textContent()) === '100%');
@@ -156,9 +156,9 @@ function check(name, ok, detail = '') {
   check('Highlight overlay on select', await hl.count() === 1);
   if (await hl.count() === 1) {
     const border = await hl.evaluate(el => getComputedStyle(el).borderTopColor);
-    check('Highlight green border', border === 'rgb(79, 174, 109)', border);
+    check('Highlight green border', border === 'rgb(61, 210, 24)', border);
     const bg = await hl.evaluate(el => getComputedStyle(el).backgroundColor);
-    check('Highlight tinted bg', bg.includes('rgba(122, 205, 150'), bg);
+    check('Highlight tinted bg', bg.includes('rgba(61, 210, 24'), bg);
     const label = await page.locator('.answer-highlight-label').textContent();
     check('Highlight Q label', /^Q\d/.test(label), label);
   }
@@ -188,7 +188,7 @@ function check(name, ok, detail = '') {
 
   // Selected card styling
   const selBorder = await page.locator('.q-card.selected').first().evaluate(el => getComputedStyle(el).borderTopColor);
-  check('Selected card coral border', selBorder === 'rgb(242, 137, 112)', selBorder);
+  check('Selected card coral border', selBorder === 'rgb(255, 122, 82)', selBorder);
 
   await page.screenshot({ path: path.join(__dirname, 'shots', 'audit-results.png'), fullPage: false });
 
@@ -210,11 +210,7 @@ function check(name, ok, detail = '') {
   check('[M] Desktop header hidden', !(await mob.locator('.header').first().isVisible().catch(() => false)));
   check('[M] Cards stacked single column', (await mob.locator('.upload-cards').evaluate(el => getComputedStyle(el).gridTemplateColumns.split(' ').length)) === 1);
   const btnW = await mob.locator('.start-btn').evaluate(el => el.getBoundingClientRect().width);
-  const contentW = await mob.locator('.start-btn').evaluate(el => {
-    const cs = getComputedStyle(el.parentElement);
-    return el.parentElement.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight);
-  });
-  check('[M] Full-width start button', Math.abs(btnW - contentW) < 2, `btn ${Math.round(btnW)} vs content ${Math.round(contentW)}`);
+  check('[M] Figma-width start button', Math.abs(btnW - 200) < 2, `btn ${Math.round(btnW)}`);
 
   await mob.goto('http://localhost:3000/?demo=1', { waitUntil: 'networkidle' });
   await mob.waitForTimeout(1000);

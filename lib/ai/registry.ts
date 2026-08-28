@@ -1,6 +1,5 @@
 import type { VisionProvider } from "./provider";
 import { GeminiProvider } from "./gemini";
-import { GLMProvider } from "./glm";
 import { OpenAICompatibleVisionProvider } from "./openai-compatible";
 import { NemotronOcrClient } from "./nemotron-ocr";
 import type { DocumentOcrEngine } from "./document-ocr";
@@ -27,41 +26,41 @@ export type ProviderEntry = {
 
 // ── VLM REASONING PROVIDER CHAIN ────────────────────────────────
 // Controlled ordering of multi-modal vision reasoning providers.
-// Primary fast path is Groq Qwen 3.6 27B.
+// Verified providers lead each phase; intermittent providers remain as fallbacks.
 export const PROVIDER_ORDER: string[] = [
+  "navyai-gemini25",
+  "ollama-gemma4",
+  "ollama-minimax-m3",
+  "gemini35",
   "groq",
   "nararouter-stepfun",
   "nararouter-minimax",
   "monyet",
-  "glm46",
-  "gemini36",
   "nemotron",
-  "navyai-gemini25",
-  "conduit",
 ];
 
 export const QUESTION_PROVIDER_ORDER: string[] = [
-  "groq",
   "navyai-gemini25",
+  "ollama-gemma4",
+  "ollama-minimax-m3",
+  "gemini35",
+  "groq",
   "nararouter-stepfun",
   "nararouter-minimax",
-  "glm46",
-  "gemini36",
   "monyet",
   "nemotron",
-  "conduit",
 ];
 
 export const ANSWER_PROVIDER_ORDER: string[] = [
   "navyai-gemini25",
-  "nararouter-minimax",
+  "ollama-gemma4",
+  "ollama-minimax-m3",
+  "gemini35",
   "groq",
-  "glm46",
-  "gemini36",
-  "monyet",
   "nararouter-stepfun",
+  "nararouter-minimax",
+  "monyet",
   "nemotron",
-  "conduit",
 ];
 
 // ── SPECIALIZED OCR ENGINE (Separate from VLM Chain) ────────────
@@ -80,7 +79,7 @@ const PROVIDER_REGISTRY: ProviderEntry[] = [
     baseUrlEnv: "NARAROUTER_BASE_URL",
     requireBaseUrlEnv: true,
     capabilities: { image: true, pdf: false, pdfStrategy: "render-pages" },
-    timeoutMs: 8000,
+    timeoutMs: 15000,
     retries: 0,
   },
   {
@@ -91,7 +90,7 @@ const PROVIDER_REGISTRY: ProviderEntry[] = [
     baseUrlEnv: "NARAROUTER_BASE_URL",
     requireBaseUrlEnv: true,
     capabilities: { image: true, pdf: false, pdfStrategy: "render-pages" },
-    timeoutMs: 8000,
+    timeoutMs: 20000,
     retries: 0,
   },
   {
@@ -103,18 +102,29 @@ const PROVIDER_REGISTRY: ProviderEntry[] = [
     modelEnv: "NAVYAI_MODEL",
     requireBaseUrlEnv: true,
     capabilities: { image: true, pdf: false, pdfStrategy: "render-pages" },
-    timeoutMs: 10000,
+    timeoutMs: 20000,
     retries: 0,
   },
   {
-    id: "conduit",
-    displayName: "Conduit (Gemini 2.5 Flash / Grok)",
-    model: "gemini-2.5-flash",
-    apiKeyEnv: "CONDUIT_API_KEY",
-    baseUrl: "https://conduit.ozdoev.net/v1",
-    modelEnv: "CONDUIT_MODEL",
+    id: "ollama-gemma4",
+    displayName: "Ollama Cloud Gemma 4 31B",
+    model: "gemma4:31b",
+    apiKeyEnv: "OLLAMA_CLOUD_API_KEY",
+    baseUrl: "https://ollama.com/v1",
+    modelEnv: "OLLAMA_GEMMA_MODEL",
     capabilities: { image: true, pdf: false, pdfStrategy: "render-pages" },
-    timeoutMs: 10000,
+    timeoutMs: 30000,
+    retries: 0,
+  },
+  {
+    id: "ollama-minimax-m3",
+    displayName: "Ollama Cloud MiniMax M3",
+    model: "minimax-m3",
+    apiKeyEnv: "OLLAMA_CLOUD_API_KEY",
+    baseUrl: "https://ollama.com/v1",
+    modelEnv: "OLLAMA_MINIMAX_MODEL",
+    capabilities: { image: true, pdf: false, pdfStrategy: "render-pages" },
+    timeoutMs: 45000,
     retries: 0,
   },
   {
@@ -145,18 +155,7 @@ const PROVIDER_REGISTRY: ProviderEntry[] = [
     apiKeyEnv: "GEMINI_API_KEY",
     capabilities: { image: true, pdf: true, pdfStrategy: "native" },
     modelEnv: "GEMINI35_MODEL",
-    timeoutMs: 8000,
-    retries: 0,
-  },
-  {
-    id: "glm46",
-    displayName: "GLM-4.6V-Flash",
-    model: "glm-4.6v-flash",
-    apiKeyEnv: "GLM_API_KEY",
-    baseUrl: "https://api.z.ai/api/paas/v4",
-    capabilities: { image: true, pdf: false, pdfStrategy: "render-pages" },
-    modelEnv: "GLM_MODEL",
-    timeoutMs: 8000,
+    timeoutMs: 30000,
     retries: 0,
   },
   {
@@ -214,10 +213,6 @@ export function createProviderFromEntry(entry: ProviderEntry): VisionProvider | 
   if (entry.id === "gemini36" || entry.id === "gemini35") {
     const model = (entry.modelEnv ? process.env[entry.modelEnv] : undefined) ?? entry.model;
     return new GeminiProvider(apiKey, model, entry.id, entry.timeoutMs);
-  }
-
-  if (entry.id === "glm46") {
-    return new GLMProvider(apiKey, entry.timeoutMs);
   }
 
   const baseUrl = configuredBaseUrl ?? entry.baseUrl;

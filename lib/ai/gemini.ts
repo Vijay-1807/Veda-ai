@@ -5,8 +5,10 @@ import { answerPrompt, answerPromptWithOcr, normalizeExtraction, parseModelJson,
 export class GeminiProvider implements VisionProvider {
   readonly name: string;
   private model;
-  constructor(apiKey: string, model = process.env.GEMINI_MODEL ?? "gemini-3.6-flash", name = "gemini36", private timeoutMs = 45000) {
+  private timeoutMs: number;
+  constructor(apiKey: string, model = process.env.GEMINI_MODEL ?? "gemini-3.6-flash", name = "gemini36", timeoutMs = 45000) {
     this.name = name;
+    this.timeoutMs = timeoutMs;
     this.model = new GoogleGenerativeAI(apiKey).getGenerativeModel({ model, generationConfig: { responseMimeType: "application/json" } });
   }
   private async generate(prompt: string, file: VisionFile) {

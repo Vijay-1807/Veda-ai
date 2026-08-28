@@ -1,0 +1,372 @@
+{
+  "questions": [
+    {
+      "id": "q21",
+      "number": "21.",
+      "originalLabel": "21.",
+      "normalizedNumber": "21",
+      "text": "Define a natural resource. Give two examples.",
+      "page": 1,
+      "bbox": [
+        0.05,
+        0.25,
+        0.55,
+        0.27
+      ],
+      "marks": 2,
+      "confidence": 0.99
+    },
+    {
+      "id": "q22",
+      "number": "22.",
+      "originalLabel": "22.",
+      "normalizedNumber": "22",
+      "text": "What is the chemical formula of baking soda?",
+      "page": 1,
+      "bbox": [
+        0.05,
+        0.28,
+        0.55,
+        0.3
+      ],
+      "marks": 2,
+      "confidence": 0.99
+    },
+    {
+      "id": "q23",
+      "number": "23.",
+      "originalLabel": "23.",
+      "normalizedNumber": "23",
+      "text": "Differentiate between solar eclipse and lunar eclipse.",
+      "page": 1,
+      "bbox": [
+        0.05,
+        0.31,
+        0.6,
+        0.33
+      ],
+      "marks": 2,
+      "confidence": 0.99
+    },
+    {
+      "id": "q24",
+      "number": "24.",
+      "originalLabel": "24.",
+      "normalizedNumber": "24",
+      "text": "Name the process by which plants prepare their own food.",
+      "page": 1,
+      "bbox": [
+        0.05,
+        0.34,
+        0.65,
+        0.36
+      ],
+      "marks": 2,
+      "confidence": 0.99
+    },
+    {
+      "id": "q25",
+      "number": "25.",
+      "originalLabel": "25.",
+      "normalizedNumber": "25",
+      "text": "What is the function of mitochondria in a cell?",
+      "page": 1,
+      "bbox": [
+        0.05,
+        0.37,
+        0.55,
+        0.39
+      ],
+      "marks": 2,
+      "confidence": 0.99
+    },
+    {
+      "id": "q26",
+      "number": "26.",
+      "originalLabel": "26.",
+      "normalizedNumber": "26",
+      "text": "What is the SI unit of electric current?",
+      "page": 1,
+      "bbox": [
+        0.05,
+        0.4,
+        0.5,
+        0.42
+      ],
+      "marks": 2,
+      "confidence": 0.99
+    },
+    {
+      "id": "q31",
+      "number": "31.",
+      "originalLabel": "31.",
+      "normalizedNumber": "31",
+      "text": "Explain the three states of matter with examples.",
+      "page": 1,
+      "bbox": [
+        0.05,
+        0.52,
+        0.55,
+        0.54
+      ],
+      "marks": 3,
+      "confidence": 0.99
+    },
+    {
+      "id": "q32",
+      "number": "32.",
+      "originalLabel": "32.",
+      "normalizedNumber": "32",
+      "text": "What is the difference between conductors and insulators? Give examples.",
+      "page": 1,
+      "bbox": [
+        0.05,
+        0.55,
+        0.75,
+        0.57
+      ],
+      "marks": 3,
+      "confidence": 0.99
+    },
+    {
+      "id": "q33",
+      "number": "33.",
+      "originalLabel": "33.",
+      "normalizedNumber": "33",
+      "text": "Draw a labelled diagram of the human heart.",
+      "page": 1,
+      "bbox": [
+        0.05,
+        0.58,
+        0.55,
+        0.6
+      ],
+      "marks": 3,
+      "confidence": 0.99
+    },
+    {
+      "id": "q34",
+      "number": "34.",
+      "originalLabel": "34.",
+      "normalizedNumber": "34",
+      "text": "Write the full form of DNA. What is its function?",
+      "page": 1,
+      "bbox": [
+        0.05,
+        0.61,
+        0.55,
+        0.63
+      ],
+      "marks": 3,
+      "confidence": 0.99
+    },
+    {
+      "id": "q35",
+      "number": "35.",
+      "originalLabel": "35.",
+      "normalizedNumber": "35",
+      "text": "Explain the process of photosynthesis with the help of a diagram.",
+      "page": 1,
+      "bbox": [
+        0.05,
+        0.64,
+        0.65,
+        0.66
+      ],
+      "marks": 3,
+      "confidence": 0.99
+    },
+    {
+      "id": "q36",
+      "number": "36.",
+      "originalLabel": "36.",
+      "normalizedNumber": "36",
+      "text": "Why are fossils important to us?",
+      "page": 1,
+      "bbox": [
+        0.05,
+        0.67,
+        0.4,
+        0.69
+      ],
+      "marks": 3,
+      "confidence": 0.99
+    },
+    {
+      "id": "q37",
+      "number": "37.",
+      "originalLabel": "37.",
+      "normalizedNumber": "37",
+      "text": "State and explain Newton's first law of motion.",
+      "page": 1,
+      "bbox": [
+        0.05,
+        0.7,
+        0.55,
+        0.72
+      ],
+      "marks": 3,
+      "confidence": 0.99
+    },
+    {
+      "id": "q41a",
+      "number": "41. (a)",
+      "originalLabel": "41. (a)",
+      "normalizedNumber": "41a",
+      "text": "Define reflection of light.",
+      "page": 1,
+      "bbox": [
+        0.05,
+        0.81,
+        0.35,
+        0.83
+      ],
+      "marks": 5,
+      "confidence": 0.98
+    },
+    {
+      "id": "q41b",
+      "number": "41. (b)",
+      "originalLabel": "41. (b)",
+      "normalizedNumber": "41b",
+      "text": "Draw a ray diagram to show reflection from a plane mirror.",
+      "page": 1,
+      "bbox": [
+        0.05,
+        0.84,
+        0.6,
+        0.86
+      ],
+      "marks": 5,
+      "confidence": 0.98
+    },
+    {
+      "id": "q42",
+      "number": "42.",
+      "originalLabel": "42.",
+      "normalizedNumber": "42",
+      "text": "Describe the human digestive system with the help of a labelled diagram.",
+      "page": 1,
+      "bbox": [
+        0.05,
+        0.87,
+        0.75,
+        0.89
+      ],
+      "marks": 5,
+      "confidence": 0.99
+    },
+    {
+      "id": "q43",
+      "number": "43.",
+      "originalLabel": "43.",
+      "normalizedNumber": "43",
+      "text": "Explain the working of an electric bell with a diagram.",
+      "page": 1,
+      "bbox": [
+        0.05,
+        0.9,
+        0.6,
+        0.92
+      ],
+      "marks": 5,
+      "confidence": 0.99
+    },
+    {
+      "id": "q51",
+      "number": "51.",
+      "originalLabel": "51.",
+      "normalizedNumber": "51",
+      "text": "Case Study: Read the passage given below and answer the questions that follow. A student performs an experiment with a convex lens and an object placed at different positions. He observes the nature and position of the image formed.",
+      "page": 1,
+      "bbox": [
+        0.05,
+        0.95,
+        0.8,
+        0.98
+      ],
+      "marks": 4,
+      "confidence": 0.95
+    },
+    {
+      "id": "q51a",
+      "number": "51. (a)",
+      "originalLabel": "51. (a)",
+      "normalizedNumber": "51a",
+      "text": "What happens when the object is placed beyond 2F?",
+      "page": 1,
+      "bbox": [
+        0.1,
+        0.98,
+        0.6,
+        1
+      ],
+      "marks": 4,
+      "confidence": 0.98
+    },
+    {
+      "id": "q51b",
+      "number": "51. (b)",
+      "originalLabel": "51. (b)",
+      "normalizedNumber": "51b",
+      "text": "What happens when the object is placed between F and 2F?",
+      "page": 1,
+      "bbox": [
+        0.1,
+        1,
+        0.6,
+        1
+      ],
+      "marks": 4,
+      "confidence": 0.98
+    },
+    {
+      "id": "q52",
+      "number": "52.",
+      "originalLabel": "52.",
+      "normalizedNumber": "52",
+      "text": "Case Study: Read the passage given below and answer the questions that follow. A factory discharges waste containing harmful chemicals into a river. The aquatic life is affected and the water becomes unfit for use.",
+      "page": 1,
+      "bbox": [
+        0.05,
+        1,
+        0.8,
+        1
+      ],
+      "marks": 4,
+      "confidence": 0.95
+    },
+    {
+      "id": "q52a",
+      "number": "52. (a)",
+      "originalLabel": "52. (a)",
+      "normalizedNumber": "52a",
+      "text": "Name the type of pollution caused.",
+      "page": 1,
+      "bbox": [
+        0.1,
+        1,
+        0.5,
+        1
+      ],
+      "marks": 4,
+      "confidence": 0.98
+    },
+    {
+      "id": "q52b",
+      "number": "52. (b)",
+      "originalLabel": "52. (b)",
+      "normalizedNumber": "52b",
+      "text": "Suggest two ways to control this pollution.",
+      "page": 1,
+      "bbox": [
+        0.1,
+        1,
+        0.5,
+        1
+      ],
+      "marks": 4,
+      "confidence": 0.98
+    }
+  ]
+}

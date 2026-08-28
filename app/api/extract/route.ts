@@ -132,14 +132,22 @@ function answerDiagnostics(
 async function extractOcrWithFallback(file: Parameters<DocumentOcrEngine["extractOcr"]>[0], engines: DocumentOcrEngine[]) {
   let lastError: unknown;
   for (const engine of engines) {
-    try {
-      console.log(`[extract:ocr] → ${engine.name}`);
-      const result = await engine.extractOcr(file);
-      console.log(`[extract:ocr] ← ${engine.name} (${result.totalBlocks} blocks)`);
-      return { result, engine: engine.name };
-    } catch (error) {
-      lastError = error;
-      console.warn(`[extract:ocr] ${engine.name} unavailable:`, error instanceof Error ? error.message : error);
+    for (let attempt = 0; attempt < 2; attempt++) {
+      try {
+        console.log(`[extract:ocr] → ${engine.name} attempt ${attempt + 1}`);
+        const result = await engine.extractOcr(file);
+        console.log(`[extract:ocr] ← ${engine.name} (${result.totalBlocks} blocks)`);
+        return { result, engine: engine.name };
+      } catch (error) {
+        lastError = error;
+        const transient = isTransientFailure(error);
+        console.warn(`[extract:ocr] ${engine.name} unavailable:`, error instanceof Error ? error.message : error);
+        if (attempt === 0 && transient) {
+          await new Promise((resolve) => setTimeout(resolve, 200));
+          continue;
+        }
+        break;
+      }
     }
   }
   throw lastError instanceof Error ? lastError : new Error("No OCR engine is available");
@@ -258,6 +266,8 @@ export async function POST(request: Request) {
   const unavailableQuestionProviders = new Set<string>();
   const unavailableAnswerProviders = new Set<string>();
   const unavailableForRequest = new Set<string>();
+  const questionQualityFailures = new Set<string>();
+  const answerQualityFailures = new Set<string>();
 
   // ══════════════════════════════════════════════════════════════════
   // PHASE 1: QUESTION EXTRACTION
@@ -306,6 +316,7 @@ export async function POST(request: Request) {
             break;
           }
           console.warn(`[extract:questions] ✗ ${provider.name} rejected: ${qVal.reason} (${durationMs}ms)`);
+          questionQualityFailures.add(provider.name);
           throw new Error(`Incomplete question extraction: ${qVal.reason}`);
         }
         questionLatencyMs += durationMs;
@@ -380,7 +391,10 @@ export async function POST(request: Request) {
       usedOcrEngine = engine;
       ocrLatencyMs += Date.now() - ocrT0;
       const evidence = extractQuestionsFromOcr(paperOcr);
-      const recoveryProvider = questionProviders.find((p) => p.extractQuestionsWithOcr && !unavailableQuestionProviders.has(p.name));
+      const recoveryProvider = questionProviders.find((provider) =>
+        provider.extractQuestionsWithOcr &&
+        (questionQualityFailures.has(provider.name) || !unavailableQuestionProviders.has(provider.name))
+      );
       if (evidence.length >= 3 && recoveryProvider?.extractQuestionsWithOcr) {
         totalApiCalls++;
         const reconstructed = await recoveryProvider.extractQuestionsWithOcr(paperFile, ocrSummary(paperOcr));
@@ -444,6 +458,7 @@ export async function POST(request: Request) {
         const aVal = validateAnswerQuality(ans, extractedQuestions);
         if (!aVal.ok) {
           console.warn(`[extract:answers] ✗ ${provider.name} rejected: ${aVal.reason} (${durationMs}ms)`);
+          answerQualityFailures.add(provider.name);
           throw new Error(`Incomplete answer extraction: ${aVal.reason}`);
         }
         answerLatencyMs += durationMs;
@@ -475,12 +490,11 @@ export async function POST(request: Request) {
         providerHealthSummary.push({ provider: provider.name, status: "failed", failureReason: msg.slice(0, 180), latencyMs: durationMs });
         cacheProviderFailure(provider.name, error);
 
-        unavailableAnswerProviders.add(provider.name);
-
         if (attempt === 0 && transient) {
           await new Promise((r) => setTimeout(r, 200));
           continue;
         }
+        unavailableAnswerProviders.add(provider.name);
         unavailableForRequest.add(provider.name);
         break;
       }
@@ -501,7 +515,10 @@ export async function POST(request: Request) {
       usedOcrEngine = engine;
       ocrLatencyMs += Date.now() - ocrT0;
       const evidence = extractAnswersFromOcr(answerOcr, extractedQuestions);
-      const recoveryProvider = answerProviders.find((p) => p.extractAnswersWithOcr && !unavailableAnswerProviders.has(p.name));
+      const recoveryProvider = answerProviders.find((provider) =>
+        provider.extractAnswersWithOcr &&
+        (answerQualityFailures.has(provider.name) || !unavailableAnswerProviders.has(provider.name))
+      );
       if (evidence.length > 0 && recoveryProvider?.extractAnswersWithOcr) {
         totalApiCalls++;
         const reconstructed = await recoveryProvider.extractAnswersWithOcr(answerFile, extractedQuestions, ocrSummary(answerOcr));
@@ -549,6 +566,31 @@ export async function POST(request: Request) {
     questionProvider === answerProvider
       ? questionProvider
       : [questionProvider, answerProvider].filter(Boolean).join("+");
+
+  if (!effectiveQuality.ok && !ocrEngines.length) {
+    const boxes = bboxStats(result.questions, result.answers);
+    return NextResponse.json({
+      error: `Extraction quality gate failed: ${effectiveQuality.reason}`,
+      details: providerErrors,
+      providerHealthSummary,
+      questionProvider,
+      answerProvider,
+      ocrEngine: null,
+      ocrAssisted: false,
+      questionsCount: result.questions.length,
+      answersCount: result.answers.length,
+      mappedCount: acceptedMappingCount,
+      unmatchedCount: mappingResult.unmatched.length,
+      bboxValidCount: boxes.valid,
+      bboxInvalidCount: boxes.invalid,
+      crossAnswerViolations: initialCrossAnswerViolations,
+      totalApiCalls,
+      questionLatencyMs,
+      answerLatencyMs,
+      ocrLatencyMs,
+      totalLatencyMs: Date.now() - t0,
+    }, { status: 422 });
+  }
 
   if (!effectiveQuality.ok && answerRecoveryAttempted) {
     const boxes = bboxStats(result.questions, result.answers);
@@ -610,13 +652,6 @@ export async function POST(request: Request) {
         `[extract:ocr] ${usedOcrEngine || "OCR"} completed in ${ocrMs}ms ` +
         `(paper: ${paperOcr?.totalBlocks ?? "ERR"} blocks, answer: ${answerOcr?.totalBlocks ?? "ERR"} blocks)`
       );
-
-      if (paperOcr && result.questions.length < 3) {
-        const recoveredQuestions = extractQuestionsFromOcr(paperOcr);
-        if (recoveredQuestions.length > result.questions.length) {
-          result.questions = recoveredQuestions;
-        }
-      }
 
        if (answerOcr) {
          const affected = problematicAnswerLabels(result.answers);

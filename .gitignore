@@ -10,6 +10,7 @@ VedaAI Hiring Assignment/
 logs/
 scripts/sample-*.pdf
 scripts/shots/
+scripts/acceptance-shots/
 test imgs/
 test-response.json
 test-groq.json

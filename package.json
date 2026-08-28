@@ -8,7 +8,9 @@
     "start": "next start",
     "test": "node --experimental-loader ./scripts/ts-loader.mjs --experimental-strip-types scripts/test-normalization.ts && node --experimental-loader ./scripts/ts-loader.mjs --experimental-strip-types scripts/test-ocr-integration.ts",
     "lint": "tsc --noEmit",
-    "test:ui": "node scripts/audit.js"
+    "test:ui": "node scripts/audit.js",
+    "test:acceptance": "node scripts/acceptance-audit.js && node scripts/compare-all-references.js",
+    "test:live": "node scripts/live-extraction-check.cjs"
   },
   "dependencies": {
     "@google/generative-ai": "^0.24.1",

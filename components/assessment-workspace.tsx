@@ -75,11 +75,24 @@ function VedaLogo({ size = 30 }: { size?: number }) {
 function SparkleIconLarge() {
   return (
     <svg width="90" height="90" viewBox="0 0 90 90" fill="none">
-      <path d="M52 10 L56 28 L74 24 L58 36 L74 48 L56 44 L52 62 L48 44 L30 48 L46 36 L30 24 L48 28 Z" fill="#ef7458" />
-      <circle cx="34" cy="34" r="4" fill="#ef7458" opacity="0.6" />
-      <path d="M64 52 L66 58 L72 56 L66 60 L68 66 L64 62 L60 66 L62 60 L56 56 L62 58 Z" fill="#ef7458" opacity="0.45" />
-      <circle cx="62" cy="62" r="2.5" fill="#ef7458" opacity="0.35" />
+      <path d="M52 10 L56 28 L74 24 L58 36 L74 48 L56 44 L52 62 L48 44 L30 48 L46 36 L30 24 L48 28 Z" fill="#ff5623" />
+      <circle cx="34" cy="34" r="4" fill="#ff5623" opacity="0.6" />
+      <path d="M64 52 L66 58 L72 56 L66 60 L68 66 L64 62 L60 66 L62 60 L56 56 L62 58 Z" fill="#ff5623" opacity="0.45" />
+      <circle cx="62" cy="62" r="2.5" fill="#ff5623" opacity="0.35" />
     </svg>
+  );
+}
+
+function TeacherPortrait() {
+  return (
+    // eslint-disable-next-line @next/next/no-img-element
+    <img
+      className="teacher-portrait"
+      src="/teacher-portrait.png"
+      alt="AI Teacher Assistant"
+      width={78}
+      height={78}
+    />
   );
 }
 
@@ -96,7 +109,7 @@ function PdfIcon() {
 
 function CustomImageIcon() {
   return (
-    <div className="pdf-icon" style={{ background: "#4a90e2" }}>
+    <div className="pdf-icon" style={{ background: "#d8d8d8" }}>
       <svg width="22" height="26" viewBox="0 0 22 26" fill="none">
         <rect x="1" y="1" width="20" height="24" rx="2" fill="white" fillOpacity="0.25" stroke="white" strokeWidth="1.5" />
         <text x="11" y="16" textAnchor="middle" fill="white" fontSize="7" fontWeight="800" fontFamily="DM Sans">IMG</text>
@@ -125,7 +138,7 @@ function Sidebar({
     <aside className={`sidebar ${collapsed ? "collapsed" : ""}`}>
       <div className="sidebar-header">
         <div className="brand">
-          <VedaLogo size={28} />
+          <VedaLogo size={32} />
           {!collapsed && <span className="brand-text">VedaAI</span>}
         </div>
         {!collapsed && (
@@ -138,11 +151,11 @@ function Sidebar({
       <div className="nav-section">
         {collapsed ? (
           <button className="nav-pill-collapsed" title="AI Teacher's Toolkit">
-            <Sparkles size={18} />
+            <Sparkles size={22} />
           </button>
         ) : (
           <button className="nav-pill">
-            <Sparkles size={16} />
+            <Sparkles size={20} />
             <span>AI Teacher&apos;s Toolkit</span>
           </button>
         )}
@@ -156,7 +169,7 @@ function Sidebar({
             className={`nav-item ${active ? "active" : ""} ${collapsed ? "collapsed-item" : ""}`}
             title={label}
           >
-            <Icon size={18} />
+            <Icon size={20} />
             {!collapsed && <span>{label}</span>}
           </button>
         ))}
@@ -330,7 +343,7 @@ function UploadCard({
           <div className="upload-icon-wrap" style={{ background: "#f0f0f0" }}>
             <UploadCloud size={24} color="#333" />
           </div>
-          <div className="upload-card-label" style={{ fontSize: 16 }}>
+          <div className="upload-card-label">
             Upload <span className="hl">{keyword}</span>
           </div>
           <div className="upload-card-sub" style={{ color: "#aaa" }}>Max 10MB</div>
@@ -367,7 +380,7 @@ function UploadScreen({
       <div className="upload-avatar">
         <div className="upload-avatar-ring">
           <div className="upload-avatar-inner">
-            <span className="avatar-emoji">👩‍🏫</span>
+            <TeacherPortrait />
           </div>
           <span className="avatar-dot" style={{ top: 8, right: 18 }} />
           <span className="avatar-dot" style={{ top: 28, right: 2 }} />
@@ -489,7 +502,7 @@ function AnswerViewer({
     const next = regions[nextIndex];
     if (!next) return;
     setRegionIndex(nextIndex);
-    setPage(Math.min(next.page, totalPages));
+    if (next.page <= totalPages) setPage(next.page);
   };
 
   const isPdf = doc?.file.type === "application/pdf";
@@ -546,7 +559,7 @@ function AnswerViewer({
               </div>
             )}
 
-            {activeRegion && (
+            {activeRegion && activeRegion.page === page && activeRegion.page <= totalPages && (
               <div
                 className="answer-highlight"
                 style={{
@@ -590,12 +603,8 @@ function QuestionCard({
   onToggleExpand: () => void;
   onSelect: () => void;
 }) {
-  let score = 0;
-  if (q.status === "answered") score = q.marks ?? 2;
-  else if (q.status === "uncertain") score = Math.max(0, Math.floor((q.marks ?? 2) / 2));
-  
   const statusClass = q.status === "answered" ? "full" : q.status === "uncertain" ? "partial" : "zero";
-  const scoreLabel = `${score} / ${q.marks ?? 2}`;
+  const scoreLabel = q.status === "answered" ? "Mapped" : q.status === "uncertain" ? "Review" : "Unanswered";
 
   // Parse question number: match sub-questions like "11(a)" or "11a" but NOT plain "11"
   const subMatch =
@@ -605,7 +614,8 @@ function QuestionCard({
   // i.e. "11(a)" → mainNum="11", subPart="a"
   // "21" → no subMatch (just a 2-digit number with no letter)
   const isSubQuestion = subMatch != null && /[a-zA-Z]/.test(subMatch[2]);
-  const mainNum = isSubQuestion ? subMatch![1] : (q.originalLabel || q.number).replace(/[^\d.]/g, '').replace(/\.$/, '') || q.number;
+  const visibleLabel = q.originalLabel || q.number;
+  const mainNum = isSubQuestion ? subMatch![1] : visibleLabel.replace(/\.$/, "");
   const subPart = isSubQuestion ? subMatch![2].toLowerCase() : null;
 
   return (
@@ -617,6 +627,7 @@ function QuestionCard({
         </div>
         <div className="q-card-body">
           <div className="q-card-text">{q.text || `Question ${q.number}`}</div>
+          {q.marks != null && <div className="q-max-marks">Maximum marks: {q.marks}</div>}
         </div>
         <div className="q-card-right">
           <span className={`score-pill ${statusClass}`}>{scoreLabel}</span>
@@ -627,14 +638,14 @@ function QuestionCard({
       </div>
       {isExpanded && (
         <div className="q-feedback">
-          <div className="q-feedback-label">AI Feedback</div>
+          <div className="q-feedback-label">Mapping Details</div>
           <div className="q-feedback-text">
             {q.answer?.text ? (
               q.status === "answered"
-                ? "Excellent work! You correctly identified the core concept and demonstrated a solid understanding."
-                : "The answer provided is partially correct or incomplete."
+                ? `Answer ${q.answer.originalLabel || q.answer.questionNumber || "record"} was matched by its explicit question label. Awarded marks require an answer key or teacher rubric.`
+                : "This answer was inferred from incomplete numbering. Please review the mapping before grading."
             ) : (
-              "The student has provided an answer for this question."
+              "No matching answer was found for this question."
             )}
           </div>
         </div>
@@ -703,7 +714,7 @@ function ResultsScreen({
         <div className={`questions-panel ${mobileTab === "answers" ? "mobile-hidden" : ""}`}>
           <div className="questions-header">
             <div>
-              <h3>Extracted Questions (from question paper)</h3>
+              <h3>Extracted Questions <span className="questions-heading-detail">(from question paper)</span></h3>
               {unmatchedCount > 0 && <small className="unmatched-note">{unmatchedCount} answer{unmatchedCount === 1 ? "" : "s"} could not be mapped</small>}
             </div>
             <button className="expand-all-btn" onClick={expandAll}>Expand All</button>
@@ -895,9 +906,7 @@ export function AssessmentWorkspace() {
 
   // Auto-collapse sidebar when leaving upload screen, auto-expand when returning
   useEffect(() => {
-    if (stage !== "upload") {
-      setSidebarCollapsed(true);
-    }
+    setSidebarCollapsed(stage !== "upload");
   }, [stage]);
 
   return (

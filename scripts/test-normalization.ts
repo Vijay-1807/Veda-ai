@@ -2,6 +2,30 @@ import assert from "node:assert/strict";
 import { mapAnswers } from "../lib/mapping";
 import { normalizeQuestionIdentity, normalizeQuestionNumber, type Answer, type Question } from "../lib/types";
 import { renderPdfPages } from "../lib/ai/pdf-pages";
+import {
+  ANSWER_PROVIDER_ORDER,
+  getAllProviderEntries,
+  PROVIDER_ORDER,
+  QUESTION_PROVIDER_ORDER,
+} from "../lib/ai/registry";
+
+const expectedProviderOrder = [
+  "navyai-gemini25",
+  "ollama-gemma4",
+  "ollama-minimax-m3",
+  "gemini35",
+  "groq",
+  "nararouter-stepfun",
+  "nararouter-minimax",
+  "monyet",
+  "nemotron",
+];
+assert.deepEqual(PROVIDER_ORDER, expectedProviderOrder);
+assert.deepEqual(QUESTION_PROVIDER_ORDER, expectedProviderOrder);
+assert.deepEqual(ANSWER_PROVIDER_ORDER, expectedProviderOrder);
+const registeredProviderIds = getAllProviderEntries().map((entry) => entry.id);
+assert.ok(!registeredProviderIds.includes("glm46"), "GLM must not be registered");
+assert.ok(!registeredProviderIds.includes("conduit"), "Conduit must not be registered");
 
 const equivalentGroups = [
   ["11", "(11)"],
@@ -54,6 +78,13 @@ assert.equal(inferred.status, "uncertain");
 
 const blockedInference = mapAnswers([question("41")], [answer("a1", "41(a)"), answer("a2", "41(b)")]).mapped[0];
 assert.equal(blockedInference.answer, null, "plain parent must not infer when conflicting subparts exist");
+
+const exactChildPriority = mapAnswers(
+  [question("41"), question("41(a)")],
+  [answer("a1", "41(a)")]
+).mapped;
+assert.equal(exactChildPriority[0].answer, null, "parent must not consume an exact child answer");
+assert.equal(exactChildPriority[1].answer?.id, "a1", "exact child match must be reserved first");
 
 const minimalPdf = Buffer.from("%PDF-1.4\n1 0 obj<</Type/Catalog/Pages 2 0 R>>endobj\n2 0 obj<</Type/Pages/Kids[3 0 R]/Count 1>>endobj\n3 0 obj<</Type/Page/Parent 2 0 R/MediaBox[0 0 595 842]>>endobj\ntrailer<</Size 4/Root 1 0 R>>\n%%EOF").toString("base64");
 const renderedPages = await renderPdfPages({ data: minimalPdf, mimeType: "application/pdf", name: "test.pdf" });

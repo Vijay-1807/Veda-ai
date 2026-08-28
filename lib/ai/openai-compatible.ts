@@ -24,9 +24,11 @@ const GROQ_PROVIDER_IDS = new Set(["groq"]);
 
 export class OpenAICompatibleVisionProvider implements VisionProvider {
   readonly name: string;
+  private config: Config;
   private supportsVision: boolean;
 
-  constructor(private config: Config) {
+  constructor(config: Config) {
+    this.config = config;
     this.name = config.name;
     this.supportsVision = config.supportsVision !== false;
   }
@@ -137,10 +139,31 @@ export class OpenAICompatibleVisionProvider implements VisionProvider {
     for (const page of pages) {
       results.push(await this.generate(prompt, page, page.page));
     }
-    return {
-      questions: results.flatMap((r) => r.questions),
-      answers: results.flatMap((r) => r.answers),
-    };
+    const questions = results.flatMap((result) => result.questions).map((question, index) => ({
+      ...question,
+      id: `q${index + 1}`,
+    }));
+    const answers = results.flatMap((result) => result.answers).reduce<Answer[]>((merged, answer) => {
+      const canonical = answer.identity?.canonical ?? answer.normalizedQuestionNumber ?? "";
+      const existing = canonical
+        ? merged.find((item) => (item.identity?.canonical ?? item.normalizedQuestionNumber ?? "") === canonical)
+        : undefined;
+      if (!existing) {
+        merged.push({ ...answer, id: `a${merged.length + 1}` });
+        return merged;
+      }
+      existing.regions = [...existing.regions, ...answer.regions].filter((region, index, all) =>
+        all.findIndex((item) => item.page === region.page && item.bbox.join(",") === region.bbox.join(",")) === index
+      );
+      existing.text = [existing.text, answer.text]
+        .filter(Boolean)
+        .filter((text, index, all) => all.indexOf(text) === index)
+        .join(" ")
+        .slice(0, 500);
+      existing.confidence = Math.max(existing.confidence, answer.confidence);
+      return merged;
+    }, []);
+    return { questions, answers };
   }
 
   async extractQuestions(file: VisionFile): Promise<Question[]> {

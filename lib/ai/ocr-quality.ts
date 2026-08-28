@@ -170,7 +170,7 @@ export function extractQuestionsFromOcr(ocrResult: OcrDocumentResult): Question[
       const text = b.text.trim();
 
       // Track section marks if mentioned
-      const secMatch = text.match(/SECTION\s+[A-E].*?(\d+)\s*[xX*]/i);
+      const secMatch = text.match(/SECTION\s+[A-E].*?\d+\s*[xX*×]\s*(\d+)/i);
       if (secMatch) {
         currentSectionMarks = parseInt(secMatch[1], 10) || currentSectionMarks;
       }

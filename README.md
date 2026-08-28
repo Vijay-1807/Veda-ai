@@ -29,11 +29,13 @@ A Next.js hiring-assignment application that extracts questions from a question 
 
 Question and answer extraction use independent ordered fallbacks and stop at the first valid document-level result.
 
-Question order: Groq, NavyAI, NaraRouter StepFun, NaraRouter MiniMax, GLM, Gemini, Monyet, NVIDIA Nemotron Omni, then Conduit.
+Question order: NavyAI Gemini 2.5 Flash, Ollama Cloud Gemma 4 31B, Ollama Cloud MiniMax M3, Gemini 3.5 Flash, Groq, NaraRouter StepFun, NaraRouter MiniMax, Monyet, then NVIDIA Nemotron Omni.
 
-Answer order: NavyAI, NaraRouter MiniMax, Groq, GLM, Gemini, Monyet, NaraRouter StepFun, NVIDIA Nemotron Omni, then Conduit.
+Answer order: NavyAI Gemini 2.5 Flash, Ollama Cloud Gemma 4 31B, Ollama Cloud MiniMax M3, Gemini 3.5 Flash, Groq, NaraRouter StepFun, NaraRouter MiniMax, Monyet, then NVIDIA Nemotron Omni.
 
 Nemotron OCR v2 is the only specialized OCR engine. It runs conditionally for incomplete extraction or geometry recovery and is never returned as semantic truth. Permanent failures and timeouts skip immediately; only genuine temporary 5xx/network failures receive one short retry.
+
+The first four providers are the verified production path. Groq, NaraRouter, Monyet, and Nemotron Omni remain later best-effort fallbacks because availability and image limits can vary by request. GLM and Conduit are not part of the active workflow.
 
 ## Setup
 
@@ -76,6 +78,7 @@ node scripts/compare-png.js
 4. The mapping layer combines explicit normalized numbering, semantic token overlap, page context, and confidence.
 5. Selecting a question navigates to its answer page and draws a real HTML overlay over the PDF canvas or image.
 6. Multi-region answers expose previous/next continuation navigation.
+7. Extracted marks are shown as maximum marks only. The app does not invent awarded scores without an answer key or teacher rubric.
 
 ## Privacy
 
@@ -91,3 +94,4 @@ Import this repository into Vercel as a Next.js project and configure the variab
 - Large or highly multi-page PDFs may approach serverless request-size or execution-duration limits.
 - The included `?demo=1` route is for local UI verification only and is not used for real uploads.
 - Model IDs in `.env.example` must be available to the configured provider account; unavailable model versions will route to the next configured provider.
+- Visual-regression comparison covers all nine supplied reference screenshots. Browser/device chrome and dynamic answer-sheet content must be normalized before strict pixel-perfect thresholds can be meaningful.

@@ -35,12 +35,39 @@ function candidateScore(question: Question, answer: Answer) {
 }
 
 export function mapAnswers(questions: Question[], answers: Answer[]) {
-  const used = new Set<string>();
-  const mapped = questions.map((question) => {
+  const used = new Set<number>();
+  const exactAssignments = new Map<number, number>();
+
+  // Reserve every exact identity match before attempting parent or semantic inference.
+  // This prevents a parent question from consuming an explicit child answer.
+  questions.forEach((question, questionIndex) => {
+    const identity = questionIdentity(question);
+    const answerIndex = answers.findIndex((answer, index) =>
+      !used.has(index) && relation(identity, answerIdentity(answer)) === "exact"
+    );
+    if (answerIndex >= 0) {
+      exactAssignments.set(questionIndex, answerIndex);
+      used.add(answerIndex);
+    }
+  });
+
+  const mapped = questions.map((question, questionIndex) => {
+    const exactAnswerIndex = exactAssignments.get(questionIndex);
+    if (exactAnswerIndex !== undefined) {
+      const answer = answers[exactAnswerIndex];
+      return {
+        ...question,
+        answer,
+        answers: [answer],
+        status: "answered",
+        mappingConfidence: candidateScore(question, answer).score,
+      } satisfies MappedQuestion;
+    }
+
     const questionId = questionIdentity(question);
     const candidates = answers
-      .filter((answer) => !used.has(answer.id))
-      .map((answer) => ({ answer, ...candidateScore(question, answer) }))
+      .map((answer, index) => ({ answer, index, ...candidateScore(question, answer) }))
+      .filter((candidate) => !used.has(candidate.index))
       .filter((candidate) => {
         if (candidate.relation !== "parent") return true;
         const answerId = answerIdentity(candidate.answer);
@@ -61,7 +88,7 @@ export function mapAnswers(questions: Question[], answers: Answer[]) {
     const unique = !second || confidence - second.score >= 0.08;
     const accepted = Boolean(best && (exact || (parentInference && unique && confidence >= 0.42) || (unlabelledInference && unique && confidence >= 0.42)));
     const uncertain = accepted && !exact;
-    if (accepted && best) used.add(best.answer.id);
+    if (accepted && best) used.add(best.index);
     return {
       ...question,
       answer: accepted && best ? best.answer : null,
@@ -70,5 +97,5 @@ export function mapAnswers(questions: Question[], answers: Answer[]) {
       mappingConfidence: confidence,
     } satisfies MappedQuestion;
   });
-  return { mapped, unmatched: answers.filter((answer) => !used.has(answer.id)) };
+  return { mapped, unmatched: answers.filter((_, index) => !used.has(index)) };
 }
