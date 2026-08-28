@@ -355,25 +355,28 @@ export async function gradeAnswersWithProvider(
 ): Promise<GradeResult[]> {
   const prompt = GRADING_PROMPT(questions);
 
-  // Try providers in order: NavyAI → Groq → Gemini
+  // Text-only models for grading (no vision needed - answer text already extracted)
   const attempts = [
-    {
-      name: "navyai",
-      baseUrl: process.env.NAVYAI_BASE_URL || "https://api.navy/v1",
-      apiKey: process.env.NAVYAI_API_KEY || "",
-      model: "gemini-2.5-flash",
-    },
     {
       name: "groq",
       baseUrl: process.env.GROQ_BASE_URL || "https://api.groq.com/openai/v1",
       apiKey: process.env.GROQ_API_KEY || "",
-      model: process.env.GROQ_MODEL || "qwen/qwen3.6-27b",
+      model: "qwen/qwen3.6-27b",
+      isGroq: true,
     },
     {
       name: "monyet",
       baseUrl: process.env.MONYET_BASE_URL || "https://tokenin.my.id/v1",
       apiKey: process.env.MONYET_API_KEY || "",
       model: process.env.MONYET_MODEL || "myt/gemini-3.5-flash-free",
+      isGroq: false,
+    },
+    {
+      name: "navyai",
+      baseUrl: process.env.NAVYAI_BASE_URL || "https://api.navy/v1",
+      apiKey: process.env.NAVYAI_API_KEY || "",
+      model: "gemini-2.5-flash",
+      isGroq: false,
     },
   ];
 
@@ -382,19 +385,28 @@ export async function gradeAnswersWithProvider(
 
     try {
       console.log(`[grading] Trying ${attempt.name}...`);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const body: Record<string, any> = {
+        model: attempt.model,
+        messages: [{ role: "user", content: prompt }],
+        temperature: 0.1,
+        max_tokens: 4096,
+      };
+      // Groq needs reasoning_effort=none to prevent thinking tags
+      if (attempt.isGroq) {
+        body.max_completion_tokens = 4096;
+        body.reasoning_effort = "none";
+        delete body.max_tokens;
+      }
+
       const response = await fetch(`${attempt.baseUrl}/chat/completions`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${attempt.apiKey}`,
         },
-        body: JSON.stringify({
-          model: attempt.model,
-          messages: [{ role: "user", content: prompt }],
-          temperature: 0.1,
-          max_tokens: 4096,
-        }),
-        signal: AbortSignal.timeout(30000),
+        body: JSON.stringify(body),
+        signal: AbortSignal.timeout(45000),
       });
 
       if (!response.ok) {
@@ -413,6 +425,8 @@ export async function gradeAnswersWithProvider(
           earned: Math.max(0, Math.min(grade.earned ?? 0, questions.find((q) => q.number === grade.number)?.marks ?? 0)),
           feedback: String(grade.feedback ?? ""),
         }));
+      } else {
+        console.warn(`[grading] ${attempt.name} returned invalid JSON, raw (first 300):`, text.slice(0, 300));
       }
     } catch (error) {
       console.warn(`[grading] ${attempt.name} failed:`, error instanceof Error ? error.message : error);
