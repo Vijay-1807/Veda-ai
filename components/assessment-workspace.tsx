@@ -162,7 +162,6 @@ function Sidebar({
       </div>
 
       <nav className="nav-section" style={{ marginTop: collapsed ? 16 : 8 }}>
-        {!collapsed && <span className="nav-label">Menu</span>}
         {navItems.map(({ icon: Icon, label, active }) => (
           <button
             key={label}
@@ -179,7 +178,7 @@ function Sidebar({
 
       {!collapsed && (
         <button className="nav-item" style={{ marginBottom: 16 }}>
-          <Settings size={18} />
+          <Settings size={20} />
           <span>Settings</span>
         </button>
       )}
@@ -190,8 +189,8 @@ function Sidebar({
           <img
             src="/dps-logo.png"
             alt="Delhi Public School"
-            width={42}
-            height={42}
+            width={52}
+            height={52}
             className="school-logo-img"
             style={{ borderRadius: "50%" }}
           />
