@@ -602,9 +602,11 @@ function QuestionCard({
   onToggleExpand: () => void;
   onSelect: () => void;
 }) {
-  const statusClass = q.status === "answered" ? "full" : q.status === "uncertain" ? "partial" : "zero";
   const maxMarks = q.marks ?? 0;
-  const earnedMarks = q.status === "answered" ? maxMarks : q.status === "uncertain" ? Math.ceil(maxMarks * 0.5) : 0;
+  const earnedMarks = q.earnedMarks ?? (q.status === "answered" ? maxMarks : q.status === "uncertain" ? Math.ceil(maxMarks * 0.5) : 0);
+  const statusClass = q.earnedMarks != null && maxMarks > 0
+    ? q.earnedMarks === maxMarks ? "full" : q.earnedMarks > 0 ? "partial" : "zero"
+    : q.status === "answered" ? "full" : q.status === "uncertain" ? "partial" : "zero";
   const scoreLabel = maxMarks > 0 ? `${earnedMarks}/${maxMarks}` : q.status === "answered" ? "Mapped" : q.status === "uncertain" ? "Review" : "Unanswered";
 
   // Parse question number: match sub-questions like "11(a)" or "11a" but NOT plain "11"
@@ -641,7 +643,9 @@ function QuestionCard({
         <div className="q-feedback">
           <div className="q-feedback-label">AI Feedback</div>
           <div className="q-feedback-text">
-            {q.answer?.text ? (
+            {q.aiFeedback ? (
+              q.aiFeedback
+            ) : q.answer?.text ? (
               q.status === "answered"
                 ? `Excellent work! The answer was correctly identified and matched to this question. The response covers the key concepts expected for this question.`
                 : "This answer was inferred from partial numbering. Please review the mapping before grading."

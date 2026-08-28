@@ -325,3 +325,79 @@ export function normalizeExtraction(input: unknown) {
 
   return { questions, answers };
 }
+
+// ── AI GRADING ────────────────────────────────────────────────────
+
+export const GRADING_PROMPT = (questions: Array<{ number: string; text: string; marks: number | null; answerText: string }>) =>
+  `You are an expert exam evaluator. Grade each student answer against its question. Read the student's answer text carefully and evaluate how well it answers the question.
+
+For each question, award marks from 0 to the maximum based on:
+- Correctness of the answer
+- Completeness (key points covered)
+- Accuracy of facts/concepts
+- Quality of explanation
+
+Return ONLY valid JSON with this shape:
+{"grades":[{"number":"1","earned":2,"feedback":"Excellent work! The answer correctly identifies..."},{"number":"2","earned":0,"feedback":"No answer was provided."}]}
+
+Questions to grade:
+${JSON.stringify(questions, null, 2)}`;
+
+export interface GradeResult {
+  number: string;
+  earned: number;
+  feedback: string;
+}
+
+export async function gradeAnswersWithProvider(
+  provider: { name: string },
+  questions: Array<{ number: string; text: string; marks: number | null; answerText: string }>
+): Promise<GradeResult[]> {
+  const prompt = GRADING_PROMPT(questions);
+  const baseUrl = process.env.NAVYAI_BASE_URL || "https://api.navy/v1";
+  const apiKey = process.env.NAVYAI_API_KEY || "";
+  const model = "gemini-2.5-flash";
+
+  if (!apiKey) {
+    console.warn("[grading] No API key available, skipping grading");
+    return [];
+  }
+
+  try {
+    const response = await fetch(`${baseUrl}/chat/completions`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${apiKey}`,
+      },
+      body: JSON.stringify({
+        model,
+        messages: [{ role: "user", content: prompt }],
+        temperature: 0.1,
+        max_tokens: 4096,
+      }),
+      signal: AbortSignal.timeout(30000),
+    });
+
+    if (!response.ok) {
+      console.warn(`[grading] Provider ${provider.name} returned ${response.status}`);
+      return [];
+    }
+
+    const data = await response.json();
+    const text = data.choices?.[0]?.message?.content ?? "";
+    const parsed = parseModelJson(text) as { grades?: GradeResult[] } | null;
+
+    if (parsed && Array.isArray(parsed.grades)) {
+      return parsed.grades.map((grade) => ({
+        number: String(grade.number),
+        earned: Math.max(0, Math.min(grade.earned ?? 0, questions.find((q) => q.number === grade.number)?.marks ?? 0)),
+        feedback: String(grade.feedback ?? ""),
+      }));
+    }
+  } catch (error) {
+    console.warn(`[grading] Failed:`, error instanceof Error ? error.message : error);
+  }
+
+  return [];
+}

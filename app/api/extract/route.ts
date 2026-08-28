@@ -546,6 +546,41 @@ export async function POST(request: Request) {
   });
 
   // ══════════════════════════════════════════════════════════════════
+  // PHASE 3.5: AI GRADING
+  // ══════════════════════════════════════════════════════════════════
+  try {
+    const { gradeAnswersWithProvider } = await import("@/lib/ai/provider");
+    const questionsToGrade = mappingResult.mapped
+      .filter((q) => q.status === "answered" && q.answer && q.marks && q.marks > 0)
+      .map((q) => ({
+        number: q.number,
+        text: q.text,
+        marks: q.marks ?? 0,
+        answerText: q.answer?.text ?? "",
+      }));
+
+    if (questionsToGrade.length > 0) {
+      console.log(`[extract:grading] Grading ${questionsToGrade.length} answers...`);
+      const gradingT0 = Date.now();
+      const grades = await gradeAnswersWithProvider(
+        { name: questionProvider || answerProvider || "unknown" },
+        questionsToGrade
+      );
+      console.log(`[extract:grading] Graded ${grades.length} answers in ${Date.now() - gradingT0}ms`);
+
+      for (const grade of grades) {
+        const mapped = mappingResult.mapped.find((q) => q.number === grade.number);
+        if (mapped) {
+          mapped.earnedMarks = grade.earned;
+          mapped.aiFeedback = grade.feedback;
+        }
+      }
+    }
+  } catch (gradingError) {
+    console.warn(`[extract:grading] Grading failed, proceeding without grades:`, gradingError instanceof Error ? gradingError.message : gradingError);
+  }
+
+  // ══════════════════════════════════════════════════════════════════
   // PHASE 4: QUALITY GATE & CONDITIONAL OCR ENRICHMENT
   // ══════════════════════════════════════════════════════════════════
   const quality = evaluateQuality(result.questions, result.answers);

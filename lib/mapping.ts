@@ -51,7 +51,7 @@ export function mapAnswers(questions: Question[], answers: Answer[]) {
     }
   });
 
-  const mapped = questions.map((question, questionIndex) => {
+  const mapped: MappedQuestion[] = questions.map((question, questionIndex) => {
     const exactAnswerIndex = exactAssignments.get(questionIndex);
     if (exactAnswerIndex !== undefined) {
       const answer = answers[exactAnswerIndex];

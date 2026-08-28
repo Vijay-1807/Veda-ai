@@ -112,6 +112,8 @@ export type MappedQuestion = Question & {
   answers: Answer[];
   status: MappingStatus;
   mappingConfidence: number;
+  earnedMarks?: number | null;
+  aiFeedback?: string | null;
 };
 
 export type UploadedDocument = {
