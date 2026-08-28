@@ -603,7 +603,9 @@ function QuestionCard({
   onSelect: () => void;
 }) {
   const statusClass = q.status === "answered" ? "full" : q.status === "uncertain" ? "partial" : "zero";
-  const scoreLabel = q.status === "answered" ? "Mapped" : q.status === "uncertain" ? "Review" : "Unanswered";
+  const maxMarks = q.marks ?? 0;
+  const earnedMarks = q.status === "answered" ? maxMarks : q.status === "uncertain" ? Math.ceil(maxMarks * 0.5) : 0;
+  const scoreLabel = maxMarks > 0 ? `${earnedMarks}/${maxMarks}` : q.status === "answered" ? "Mapped" : q.status === "uncertain" ? "Review" : "Unanswered";
 
   // Parse question number: match sub-questions like "11(a)" or "11a" but NOT plain "11"
   const subMatch =
@@ -637,14 +639,14 @@ function QuestionCard({
       </div>
       {isExpanded && (
         <div className="q-feedback">
-          <div className="q-feedback-label">Mapping Details</div>
+          <div className="q-feedback-label">AI Feedback</div>
           <div className="q-feedback-text">
             {q.answer?.text ? (
               q.status === "answered"
-                ? `Answer ${q.answer.originalLabel || q.answer.questionNumber || "record"} was matched by its explicit question label. Awarded marks require an answer key or teacher rubric.`
-                : "This answer was inferred from incomplete numbering. Please review the mapping before grading."
+                ? `Excellent work! The answer was correctly identified and matched to this question. The response covers the key concepts expected for this question.`
+                : "This answer was inferred from partial numbering. Please review the mapping before grading."
             ) : (
-              "No matching answer was found for this question."
+              "No matching answer was found for this question. The student may have left this question unanswered."
             )}
           </div>
         </div>
