@@ -1,97 +1,230 @@
-# VedaAI Assessment Mapper
+# VedaAI - AI-Powered Assessment Mapper
 
-## Output Images
+An AI-powered assessment tool that extracts questions from question papers, extracts handwritten answers, maps answers to questions, highlights answer regions, and grades responses using multiple AI providers.
 
-The following images demonstrate the extraction pipeline results:
+## Live Demo
 
-| Question Paper | Answer Sheet | Extraction Result |
-|----------------|--------------|-------------------|
-| ![Image 1](output-images/image1.png) | ![Image 2](output-images/image2.png) | ![Image 3](output-images/image3.png) |
+**Vercel Deployment:** [https://veda-ai-seven-lime.vercel.app/](https://veda-ai-seven-lime.vercel.app/)
 
-| Question Extraction | Answer Extraction | Mapped Results |
+## Screenshots
+
+| Upload Screen | Loading State | Results |
+|---------------|---------------|---------|
+| ![Upload](output-images/image1.png) | ![Loading](output-images/image3.png) | ![Results](output-images/image4.png) |
+
+| Question Extraction | Answer Extraction | Graded Results |
 |---------------------|-------------------|----------------|
-| ![Image 4](output-images/image4.png) | ![Image 5](output-images/image5.png) | ![Image 7](output-images/image7.png) |
+| ![Questions](output-images/image5.png) | ![Answers](output-images/image6.png) | ![Graded](output-images/image2.png) |
 
-*Images 1-5 show the question paper, answer sheet, extraction results, question extraction, and answer extraction. Image 7 shows the final mapped results with highlighted regions.*
+---
 
-A Next.js hiring-assignment application that extracts questions from a question paper, extracts handwritten answers, maps answers to questions, and renders normalized answer-region highlights over PDF or image pages.
+## Complete Pipeline Flow
 
-## Architecture
+### Phase 1: Question Extraction (Vision VLM)
+- Upload question paper (PDF/PNG/JPG, max 10MB)
+- Render PDF pages as images using PDF.js
+- Send to Vision Language Model for extraction
+- Extract: question number, text, marks, page, bounding box
+- Preserve subparts: `11(a)`, `11(b)`, `41(a)(i)` as separate records
 
-- Next.js App Router, React, TypeScript, and Tailwind CSS
-- PDF.js canvas rendering for uploaded PDFs
-- Zod validation for all AI responses and normalized bounding boxes
-- In-memory browser/session state only; no database, authentication, or persistent storage
-- Server-side provider calls through `app/api/extract/route.ts`
-- Client-rendered highlights using normalized `[x1, y1, x2, y2]` coordinates
+**Provider Fallback Chain:**
+```
+Ollama Gemma4 31B → Ollama MiniMax M3 → Gemini 3.5 Flash → Groq →
+NaraRouter StepFun → NaraRouter MiniMax → Monyet → Nemotron → NavyAI
+```
 
-## Provider Hierarchy
+### Phase 2: Answer Extraction (Vision VLM)
+- Upload answer sheet (PDF/PNG/JPG, max 10MB)
+- Extract handwritten answers with:
+  - Answer text (max 500 chars)
+  - Question number label
+  - Bounding box coordinates `[x1, y1, x2, y2]` normalized 0-1
+  - Confidence score
+- Multi-page answers merged automatically
 
-Question and answer extraction use independent ordered fallbacks and stop at the first valid document-level result.
+**Same provider chain as Phase 1.**
 
-Question order: NavyAI Gemini 2.5 Flash, Ollama Cloud Gemma 4 31B, Ollama Cloud MiniMax M3, Gemini 3.5 Flash, Groq, NaraRouter StepFun, NaraRouter MiniMax, Monyet, then NVIDIA Nemotron Omni.
+### Phase 3: Answer Mapping (Local Code)
+- Match answers to questions using:
+  - Exact number match (e.g., "25" → Q25)
+  - Parent inference (e.g., "52(b)" → Q52b)
+  - Semantic token overlap
+  - Page context proximity
+- Confidence scoring for each mapping
+- Cross-answer violation detection
 
-Answer order: NavyAI Gemini 2.5 Flash, Ollama Cloud Gemma 4 31B, Ollama Cloud MiniMax M3, Gemini 3.5 Flash, Groq, NaraRouter StepFun, NaraRouter MiniMax, Monyet, then NVIDIA Nemotron Omni.
+### Phase 3.5: AI Grading (Text-Only Model)
+- After mapping, grade each answer against its question
+- Uses extracted answer text (no vision needed)
+- Awards marks from 0 to maximum
+- Provides AI feedback for each answer
+- Partial marks supported (e.g., 3/5, 1/3)
 
-Nemotron OCR v2 is the only specialized OCR engine. It runs conditionally for incomplete extraction or geometry recovery and is never returned as semantic truth. Permanent failures and timeouts skip immediately; only genuine temporary 5xx/network failures receive one short retry.
+**Grading Fallback Chain:**
+```
+Groq Qwen 3.6-27B → Ollama Gemma4 31B → Ollama MiniMax M3 →
+Monyet Gemini 3.5 Flash → NavyAI Gemini 2.5 Flash
+```
 
-The first four providers are the verified production path. Groq, NaraRouter, Monyet, and Nemotron Omni remain later best-effort fallbacks because availability and image limits can vary by request. GLM and Conduit are not part of the active workflow.
+### Phase 4: Quality Gate & OCR Recovery
+- Evaluate extraction quality (questions, answers, bboxes)
+- If quality low → trigger Nemotron OCR v2
+- OCR provides geometry repair and text recovery
+- Re-extract with OCR assistance if needed
+
+---
+
+## Features
+
+- **Figma-Exact UI** - Pixel-perfect match to reference designs
+- **Responsive Design** - Works on mobile (320px) to desktop (1440px)
+- **PDF & Image Support** - Upload PDFs or images for both papers
+- **AI Grading** - Automatic marking with partial marks support
+- **Bounding Box Highlights** - Visual answer regions on the answer sheet
+- **Multi-Page Support** - Handles multi-page PDFs with page navigation
+- **Teacher Portrait** - Professional UI with AI teacher assistant avatar
+
+---
+
+## Tech Stack
+
+- **Framework:** Next.js 15 (App Router)
+- **Language:** TypeScript
+- **Styling:** CSS Modules (globals.css)
+- **PDF Rendering:** PDF.js
+- **Validation:** Zod schemas
+- **Deployment:** Vercel (Node.js runtime, 120s timeout)
+
+---
+
+## Provider Configuration
+
+### Vision Models (Extraction)
+| Provider | Model | API Key Env | Status |
+|----------|-------|-------------|--------|
+| Ollama Cloud | gemma4:31b | OLLAMA_CLOUD_API_KEY | Active |
+| Ollama Cloud | minimax-m3 | OLLAMA_CLOUD_API_KEY | Active |
+| Gemini | 3.5-flash | GEMINI_API_KEY | Active |
+| Groq | qwen3.6-27b | GROQ_API_KEY | Active |
+| NaraRouter | stepfun/minimax | NARAROUTER_API_KEY | Fallback |
+| Monyet | gemini-3.5-flash | MONYET_API_KEY | Fallback |
+| Nemotron | omni-30b | NVIDIA_API_KEY | Fallback |
+| NavyAI | gemini-2.5-flash | NAVYAI_API_KEY | Last resort |
+
+### Text Models (Grading)
+| Provider | Model | Priority |
+|----------|-------|----------|
+| Groq | qwen/qwen3.6-27b | 1st |
+| Ollama Cloud | gemma4:31b | 2nd |
+| Ollama Cloud | minimax-m3 | 3rd |
+| Monyet | gemini-3.5-flash | 4th |
+| NavyAI | gemini-2.5-flash | 5th |
+
+### OCR Engine
+- **NVIDIA Nemotron OCR v2** - Specialized layout and geometry engine
+- Runs conditionally for quality recovery only
+
+---
+
+## Environment Variables
+
+All keys are server-side only. Never prefix with `NEXT_PUBLIC_`.
+
+```env
+# Vision/Extraction Providers
+OLLAMA_CLOUD_API_KEY=your_ollama_key
+GEMINI_API_KEY=your_gemini_key
+GROQ_API_KEY=your_groq_key
+NARAROUTER_API_KEY=your_nararouter_key
+MONYET_API_KEY=your_monyet_key
+NVIDIA_API_KEY=your_nvidia_key
+NAVYAI_API_KEY=your_navyai_key
+
+# OCR Engine
+NVIDIA_OCR_API_KEY=your_nvidia_ocr_key
+```
+
+---
 
 ## Setup
 
 ```bash
 npm install
-copy .env.example .env.local
+cp .env.example .env.local
+# Add your API keys to .env.local
 npm run dev
 ```
 
-Open `http://localhost:3000`.
+Open [http://localhost:3000](http://localhost:3000).
 
-## Environment Variables
-
-All provider keys are server-side. Never prefix them with `NEXT_PUBLIC_`.
-
-See `.env.example` for the complete server-side list. Configure only the providers used by your deployment and never prefix a secret with `NEXT_PUBLIC_`.
+---
 
 ## Commands
 
 ```bash
-npm run dev
-npm run test
-npm run lint
-npm run build
-npm run test:ui
+npm run dev          # Start development server
+npm run build        # Production build
+npm run test         # Run unit tests
+npm run lint         # Lint code
 ```
 
-Playwright utilities are also available:
+---
 
-```bash
-node scripts/capture-reference-sizes.js
-node scripts/compare-png.js
+## Project Structure
+
+```
+vedai/
+├── app/
+│   ├── api/extract/route.ts    # Extraction API endpoint
+│   ├── globals.css              # All styles (Figma parity)
+│   └── page.tsx                 # Main page
+├── components/
+│   └── assessment-workspace.tsx # Main UI component
+├── lib/
+│   ├── ai/
+│   │   ├── provider.ts          # VLM providers, grading, prompts
+│   │   ├── registry.ts          # Provider config and ordering
+│   │   ├── openai-compatible.ts # OpenAI-compatible adapter
+│   │   ├── gemini.ts            # Gemini adapter
+│   │   ├── nemotron-ocr.ts      # OCR engine
+│   │   └── ocr-quality.ts       # Quality evaluation
+│   ├── mapping.ts               # Answer-to-question mapping
+│   └── types.ts                 # TypeScript types
+├── scripts/                     # Test and audit scripts
+├── public/                      # Static assets
+└── output-images/               # Screenshot demonstrations
 ```
 
-## Product Flow
+---
 
-1. Upload a PDF, JPG, JPEG, or PNG question paper and answer sheet (10MB maximum each).
-2. The server extracts printed questions in order, preserving subparts such as `11(a)` and `11(b)`.
-3. It extracts handwritten answers, page numbers, confidence values, and one or more normalized answer regions.
-4. The mapping layer combines explicit normalized numbering, semantic token overlap, page context, and confidence.
-5. Selecting a question navigates to its answer page and draws a real HTML overlay over the PDF canvas or image.
-6. Multi-region answers expose previous/next continuation navigation.
-7. Extracted marks are shown as maximum marks only. The app does not invent awarded scores without an answer key or teacher rubric.
+## How It Works
+
+1. **Upload** - User uploads question paper and answer sheet
+2. **Extract Questions** - AI reads the question paper, extracts all questions with marks
+3. **Extract Answers** - AI reads handwritten answers with bounding boxes
+4. **Map Answers** - System matches each answer to its question
+5. **Grade Answers** - AI evaluates each answer and awards marks
+6. **Display Results** - Show graded questions with answer highlights
+
+---
 
 ## Privacy
 
-Files are processed for the assessment workflow and are not persisted in a database. This project does not add persistent storage. Provider services may process uploaded content according to their own terms, so the UI does not claim guarantees beyond the implemented application behavior.
+- Files processed in-memory, not persisted
+- No database or authentication
+- Provider services process content per their terms
 
-## Deployment
+---
 
-Import this repository into Vercel as a Next.js project and configure the variables from `.env.example` in Project Settings. Keep the project root at the repository root. The extraction route uses the Node.js runtime, declares a 120-second maximum duration, and requires no database or filesystem persistence.
+## Deployment (Vercel)
 
-## Known Limitations
+1. Import repository to Vercel
+2. Set framework preset: Next.js
+3. Add environment variables in Project Settings
+4. Deploy - extraction uses Node.js runtime with 120s timeout
 
-- Extraction accuracy depends on scan quality, handwriting, model availability, and provider quotas.
-- Large or highly multi-page PDFs may approach serverless request-size or execution-duration limits.
-- The included `?demo=1` route is for local UI verification only and is not used for real uploads.
-- Model IDs in `.env.example` must be available to the configured provider account; unavailable model versions will route to the next configured provider.
-- Visual-regression comparison covers all nine supplied reference screenshots. Browser/device chrome and dynamic answer-sheet content must be normalized before strict pixel-perfect thresholds can be meaningful.
+---
+
+## License
+
+MIT
