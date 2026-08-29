@@ -8,13 +8,13 @@ An AI-powered assessment tool that extracts questions from question papers, extr
 
 ## Screenshots
 
-| Upload Screen | Loading State | Results |
+| Home Screen | Upload Screen (Laptop) | Upload Screen (Mobile) |
 |---------------|---------------|---------|
-| ![Upload](output-images/image1.png) | ![Loading](output-images/image3.png) | ![Results](output-images/image4.png) |
+| ![Upload](image1.png) | ![Loading](image2.png) | ![Results](image3.png) |
 
 | Question Extraction | Answer Extraction | Graded Results |
 |---------------------|-------------------|----------------|
-| ![Questions](output-images/image5.png) | ![Answers](output-images/image6.png) | ![Graded](output-images/image2.png) |
+| ![Questions](image5.png) | ![Answers](image6.png) | ![Graded](image4.png) |
 
 ---
 
@@ -192,7 +192,7 @@ vedai/
 │   └── types.ts                 # TypeScript types
 ├── scripts/                     # Test and audit scripts
 ├── public/                      # Static assets
-└── output-images/               # Screenshot demonstrations
+└──                # Screenshot demonstrations
 ```
 
 ---
